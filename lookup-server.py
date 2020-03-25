@@ -72,7 +72,7 @@ def download_latest_deb(fp: TemporaryFile):
 
 
 def update_reprepro(fp: TemporaryFile):
-    file_path = f"/tmp/{fp.name}"
+    file_path = "/tmp/{0}".format(fp.name)
     command = (reprepro_cmd + file_path).split()
     proc = Popen(command, stdout=PIPE, stderr=PIPE)
     proc.communicate()

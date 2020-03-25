@@ -78,14 +78,15 @@ def update_reprepro(fp: NamedTemporaryFile):
     file_path = "/tmp/{0}".format(fp.name)
     command = (reprepro_cmd + file_path).split()
     proc = Popen(command, stdout=PIPE, stderr=PIPE)
-    _, err = proc.communicate()
+    out, err = proc.communicate()
     if proc.returncode != 0:
         error = err.decode("utf-8")
         logger.error("reprepro ended with an error - ret. code: "
                      "{0} | output: \n{1}".format(proc.returncode,
                                                   error))
     else:
-        logger.info("reprepro finished OK")
+        output = out.decode("utf-8")
+        logger.info("reprepro finished OK | output:\n {0}".format(output))
 
 
 def run_update_process():

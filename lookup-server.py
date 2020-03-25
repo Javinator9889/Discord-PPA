@@ -37,7 +37,10 @@ http = urllib3.PoolManager()
 
 home = str(Path.home())
 pid = "{0}/discord-ppa/discord-ppa.pid".format(home)
-os.mkdir("{0}/discord-ppa".format(home))
+try:
+    os.mkdir("{0}/discord-ppa".format(home))
+except FileExistsError:
+    pass
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

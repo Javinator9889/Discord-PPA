@@ -22,7 +22,7 @@ from pathlib import Path
 from sched import scheduler
 from time import time, sleep
 from daemonize import Daemonize
-from tempfile import TemporaryFile
+from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 
 delay_secs = 900
@@ -64,7 +64,7 @@ def main():
         exit(0)
 
 
-def download_latest_deb(fp: TemporaryFile):
+def download_latest_deb(fp: NamedTemporaryFile):
     result = http.request("GET", discord_url, redirect=True)
     if result.status == 200:
         logger.info("Downloaded correctly Discord .deb file")
@@ -74,7 +74,7 @@ def download_latest_deb(fp: TemporaryFile):
                      "code: {0}".format(result.status))
 
 
-def update_reprepro(fp: TemporaryFile):
+def update_reprepro(fp: NamedTemporaryFile):
     file_path = "/tmp/{0}".format(fp.name)
     command = (reprepro_cmd + file_path).split()
     proc = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -89,7 +89,7 @@ def update_reprepro(fp: TemporaryFile):
 
 
 def run_update_process():
-    fp = TemporaryFile(suffix=".deb")
+    fp = NamedTemporaryFile(suffix=".deb")
     try:
         download_latest_deb(fp)
         update_reprepro(fp)

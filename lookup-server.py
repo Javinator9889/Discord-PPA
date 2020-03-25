@@ -27,8 +27,12 @@ from subprocess import Popen, PIPE
 
 delay_secs = 900
 discord_url = "https://discordapp.com/api/download?platform=linux&format=deb"
-ppa_path = sys.argv[1]
-reprepro_cmd = f"reprepro -b {ppa_path} includedeb all "
+try:
+    ppa_path = sys.argv[1]
+except IndexError:
+    print("You must provide the PPA directory")
+    exit(1)
+reprepro_cmd = "reprepro -b {0} includedeb all ".format(ppa_path)
 http = urllib3.PoolManager()
 
 home = str(Path.home())
@@ -38,7 +42,8 @@ os.mkdir(f"{home}/discord-ppa")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-file_handler = logging.FileHandler(f"{home}/discord-ppa/discord-ppa.log", "w")
+file_handler = logging.FileHandler("{0}/discord-ppa/discord-ppa.log"
+                                   .format(home), "w")
 file_handler.setLevel(logging.INFO)
 
 logger.addHandler(file_handler)
@@ -62,8 +67,8 @@ def download_latest_deb(fp: TemporaryFile):
         logger.info("Downloaded correctly Discord .deb file")
         fp.write(result.data)
     else:
-        logger.error(f"Discord .deb file could not be downloaded - status "
-                     f"code: {result.status}")
+        logger.error("Discord .deb file could not be downloaded - status "
+                     "code: {0}".format(result.status))
 
 
 def update_reprepro(fp: TemporaryFile):
@@ -73,7 +78,7 @@ def update_reprepro(fp: TemporaryFile):
     proc.communicate()
     if proc.returncode != 0:
         logger.error("reprepro ended with an error - ret. code: "
-                     f"{proc.returncode}")
+                     "{0}".format(proc.returncode))
     else:
         logger.info("reprepro finished OK")
 

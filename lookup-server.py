@@ -75,8 +75,7 @@ def download_latest_deb(fp: NamedTemporaryFile):
 
 
 def update_reprepro(fp: NamedTemporaryFile):
-    file_path = "/tmp/{0}".format(fp.name)
-    command = (reprepro_cmd + file_path).split()
+    command = (reprepro_cmd + fp.name).split()
     proc = Popen(command, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
@@ -85,7 +84,7 @@ def update_reprepro(fp: NamedTemporaryFile):
                      "{0} | output: \n{1}".format(proc.returncode,
                                                   error))
     else:
-        output = out.decode("utf-8")
+        output = out.decode("utf-8") + "\n" + err.decode("utf-8")
         logger.info("reprepro finished OK | output:\n {0}".format(output))
 
 

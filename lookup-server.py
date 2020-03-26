@@ -28,12 +28,14 @@ from logging.handlers import RotatingFileHandler
 
 delay_secs = 900
 discord_url = "https://discordapp.com/api/download?platform=linux&format=deb"
+discord_pbeta_url = \
+    "https://discordapp.com/api/download/ptb?platform=linux&format=deb"
 try:
     ppa_path = sys.argv[1]
 except IndexError:
     print("You must provide the PPA directory")
     exit(1)
-reprepro_cmd = "reprepro -b {0} includedeb all ".format(ppa_path)
+reprepro_cmd = "reprepro -b {0} includedeb %dist% %file%".format(ppa_path)
 http = urllib3.PoolManager()
 
 home = str(Path.home())
@@ -70,8 +72,8 @@ def main():
         exit(0)
 
 
-def download_latest_deb(fp: NamedTemporaryFile):
-    result = http.request("GET", discord_url, redirect=True)
+def download_latest_deb(fp: NamedTemporaryFile, url: str):
+    result = http.request("GET", url, redirect=True)
     if result.status == 200:
         logger.info("Downloaded correctly Discord .deb file")
         fp.write(result.data)
@@ -80,9 +82,11 @@ def download_latest_deb(fp: NamedTemporaryFile):
                      "code: {0}".format(result.status))
 
 
-def update_reprepro(fp: NamedTemporaryFile):
-    command = (reprepro_cmd + fp.name).split()
-    proc = Popen(command, stdout=PIPE, stderr=PIPE)
+def update_reprepro(fp: NamedTemporaryFile, dist: str):
+    cmd = reprepro_cmd.replace("%dist%", dist)\
+                      .replace("%file%", fp.name)\
+                      .split()
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
         error = err.decode("utf-8")
@@ -95,12 +99,16 @@ def update_reprepro(fp: NamedTemporaryFile):
 
 
 def run_update_process():
-    fp = NamedTemporaryFile(suffix=".deb")
+    stable = NamedTemporaryFile(suffix=".deb")
+    beta = NamedTemporaryFile(suffix=".deb")
     try:
-        download_latest_deb(fp)
-        update_reprepro(fp)
+        download_latest_deb(stable, discord_url)
+        update_reprepro(stable, "all")
+        download_latest_deb(beta, discord_pbeta_url)
+        update_reprepro(beta, "public-beta")
     finally:
-        fp.close()
+        stable.close()
+        beta.close()
 
 
 daemon = Daemonize(app="discord-ppa",

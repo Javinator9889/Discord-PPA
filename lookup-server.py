@@ -44,10 +44,14 @@ except FileExistsError:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+fmt = logging.Formatter(
+    "%(process)d - %(asctime)s | [%(levelname)s]: %(message)s"
+)
 
 file_handler = logging.FileHandler("{0}/discord-ppa/discord-ppa.log"
                                    .format(home), "w")
 file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(fmt)
 
 logger.addHandler(file_handler)
 keep_fds = [file_handler.stream.fileno()]

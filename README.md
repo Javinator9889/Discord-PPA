@@ -57,6 +57,9 @@ Finally, update and install Discord:
 
 ```shell script
 sudo apt update && sudo apt install discord
+
+# If using public beta, install as follows:
+sudo apt install discord-ptb
 ```
 
 You can browse the repository at the following URL:
@@ -78,6 +81,8 @@ from your `sources.list`, run the following commands:
 
 ```shell script
 sudo apt remove discord
+# If using public beta, uninstall as follows
+sudo apt remove discord-ptb
 
 # Remove the repository using the add-apt-repository command
 # Keep in mind it must be the same as you added (stable, beta, etc.)

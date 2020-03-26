@@ -22,8 +22,9 @@ from pathlib import Path
 from sched import scheduler
 from time import time, sleep
 from daemonize import Daemonize
-from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
+from tempfile import NamedTemporaryFile
+from logging.handlers import RotatingFileHandler
 
 delay_secs = 900
 discord_url = "https://discordapp.com/api/download?platform=linux&format=deb"
@@ -48,8 +49,9 @@ fmt = logging.Formatter(
     "%(process)d - %(asctime)s | [%(levelname)s]: %(message)s"
 )
 
-file_handler = logging.FileHandler("{0}/discord-ppa/discord-ppa.log"
-                                   .format(home), "w")
+file_handler = RotatingFileHandler("{0}/discord-ppa/discord-ppa.log"
+                                   .format(home), "w", maxBytes=2 << 20,
+                                   backupCount=2)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(fmt)
 

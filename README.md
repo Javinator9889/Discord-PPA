@@ -36,7 +36,7 @@ minutes) and the end-user can have the stable installation of Discord
 Firstly, we need to **import** the GPG repository keys:
 
 ```shell script
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5890E288F7ED6702
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 08633B4AAAEB49FC
 ```
 
 Then, add the repository to your `sources.list` as follows:
@@ -89,7 +89,7 @@ sudo apt remove discord-ptb
 sudo add-apt-repository -r "deb [arch=amd64] https://ppa.javinator9889.com/ all main"
 
 # Finally, remove the key if you want not to trust it anymore
-sudo apt-key del 5890E288F7ED6702
+sudo apt-key del 08633B4AAAEB49FC
 ```
 
 ## License

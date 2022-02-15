@@ -13,23 +13,26 @@
 #
 #     You should have received a copy of the GNU General Public License
 #    along with this program. If not, see <http://www.gnu.org/licenses/>.
+import logging
 import os
 import sys
-import urllib3
-import logging
-
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from sched import scheduler
-from time import time, sleep
-from daemonize import Daemonize
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
-from logging.handlers import RotatingFileHandler
+from time import sleep, time
+
+import urllib3
+from daemonize import Daemonize
 
 delay_secs = 900
-discord_url = "https://discordapp.com/api/download?platform=linux&format=deb"
-discord_pbeta_url = \
-    "https://discordapp.com/api/download/ptb?platform=linux&format=deb"
+discord_url = r"https://discordapp.com/api/download?platform=linux&format=deb"
+discord_pbeta_url = r"https://discordapp.com/api/download/ptb?platform=linux&format=deb"
+discord_canary_url = (
+    r"https://discordapp.com/api/download/canary?platform=linux&format=deb"
+)
+
 try:
     ppa_path = sys.argv[1]
 except IndexError:
@@ -47,13 +50,11 @@ except FileExistsError:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-fmt = logging.Formatter(
-    "%(process)d - %(asctime)s | [%(levelname)s]: %(message)s"
-)
+fmt = logging.Formatter("%(process)d - %(asctime)s | [%(levelname)s]: %(message)s")
 
-file_handler = RotatingFileHandler("{0}/discord-ppa/discord-ppa.log"
-                                   .format(home), "w", maxBytes=2 << 20,
-                                   backupCount=2)
+file_handler = RotatingFileHandler(
+    "{0}/discord-ppa/discord-ppa.log".format(home), "w", maxBytes=2 << 20, backupCount=2
+)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(fmt)
 
@@ -78,21 +79,22 @@ def download_latest_deb(fp: NamedTemporaryFile, url: str):
         logger.info("Downloaded correctly Discord .deb file")
         fp.write(result.data)
     else:
-        logger.error("Discord .deb file could not be downloaded - status "
-                     "code: {0}".format(result.status))
+        logger.error(
+            "Discord .deb file could not be downloaded - status "
+            "code: {0}".format(result.status)
+        )
 
 
 def update_reprepro(fp: NamedTemporaryFile, dist: str):
-    cmd = reprepro_cmd.replace("%dist%", dist)\
-                      .replace("%file%", fp.name)\
-                      .split()
+    cmd = reprepro_cmd.replace("%dist%", dist).replace("%file%", fp.name).split()
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
         error = err.decode("utf-8")
-        logger.error("reprepro ended with an error - ret. code: "
-                     "{0} | output: \n{1}".format(proc.returncode,
-                                                  error))
+        logger.error(
+            "reprepro ended with an error - ret. code: "
+            "{0} | output: \n{1}".format(proc.returncode, error)
+        )
     else:
         output = out.decode("utf-8") + "\n" + err.decode("utf-8")
         logger.info("reprepro finished OK | output:\n {0}".format(output))
@@ -101,19 +103,21 @@ def update_reprepro(fp: NamedTemporaryFile, dist: str):
 def run_update_process():
     stable = NamedTemporaryFile(suffix=".deb")
     beta = NamedTemporaryFile(suffix=".deb")
+    canary = NamedTemporaryFile(suffix=".deb")
     try:
         download_latest_deb(stable, discord_url)
         update_reprepro(stable, "all")
         download_latest_deb(beta, discord_pbeta_url)
         update_reprepro(beta, "public-beta")
+        download_latest_deb(canary, discord_canary_url)
+        update_reprepro(canary, "canary")
     finally:
         stable.close()
         beta.close()
+        canary.close()
 
 
-daemon = Daemonize(app="discord-ppa",
-                   pid=pid,
-                   action=main,
-                   keep_fds=keep_fds,
-                   logger=logger)
+daemon = Daemonize(
+    app="discord-ppa", pid=pid, action=main, keep_fds=keep_fds, logger=logger
+)
 daemon.start()
